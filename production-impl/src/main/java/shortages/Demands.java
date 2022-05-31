@@ -49,8 +49,12 @@ public class Demands {
             return level;
         }
 
-        public long calculate(long level, long produced) {
+        public long calculateLevelOnDelivery(long level, long produced) {
             return strategy.calculate(level, produced, this.level);
+        }
+
+        public long calculateEndOfDayLevel(long level, long produced) {
+            return level + produced - this.level;
         }
     }
 }

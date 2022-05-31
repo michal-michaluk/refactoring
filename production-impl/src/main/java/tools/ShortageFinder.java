@@ -4,16 +4,12 @@ import entities.DemandEntity;
 import entities.ProductionEntity;
 import entities.ShortageEntity;
 import external.CurrentStock;
-import shortages.Demands;
-import shortages.ProductionOutputs;
 import shortages.ShortageBuilder;
+import shortages.ShortagePrediction;
+import shortages.ShortagePredictionFactory;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
-import static shortages.Demands.DailyDemand.NO_DEMAND;
 
 public class ShortageFinder {
 
@@ -41,33 +37,8 @@ public class ShortageFinder {
     public static List<ShortageEntity> findShortages(LocalDate today, int daysAhead, CurrentStock stock,
                                                      List<ProductionEntity> productions, List<DemandEntity> demandsList) {
 
-        List<LocalDate> dates = Stream.iterate(today, date -> date.plusDays(1))
-                .limit(daysAhead)
-                .collect(toList());
-
-        ProductionOutputs outputs = new ProductionOutputs(productions);
-        Demands demands = new Demands(demandsList);
-
-        long level = stock.getLevel();
-
-        ShortageBuilder shortages = new ShortageBuilder(outputs.getProductRefNo());
-        for (LocalDate day : dates) {
-            Demands.DailyDemand demand = demands.get(day);
-            if (demand == NO_DEMAND) {
-                level += outputs.getLevel(day);
-                continue;
-            }
-            long produced = outputs.getLevel(day);
-            long levelOnDelivery;
-
-            levelOnDelivery = demand.calculate(level, produced);
-
-            if (levelOnDelivery < 0) {
-                shortages.add(day, levelOnDelivery);
-            }
-            long endOfDayLevel = level + produced - demand.getLevel();
-            level = endOfDayLevel >= 0 ? endOfDayLevel : 0;
-        }
+        ShortagePrediction prediction = new ShortagePredictionFactory(today, daysAhead, stock, productions, demandsList).create();
+        ShortageBuilder shortages = prediction.predict();
         return shortages.toList();
     }
 
