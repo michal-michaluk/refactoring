@@ -5,8 +5,8 @@ import entities.ProductionEntity;
 import entities.ShortageEntity;
 import external.CurrentStock;
 import shortages.ShortageBuilder;
-import shortages.ShortagePrediction;
 import shortages.ShortagePredictionFactory;
+import shortages.ShortagePredictionService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -37,8 +37,11 @@ public class ShortageFinder {
     public static List<ShortageEntity> findShortages(LocalDate today, int daysAhead, CurrentStock stock,
                                                      List<ProductionEntity> productions, List<DemandEntity> demandsList) {
 
-        ShortagePrediction prediction = new ShortagePredictionFactory(today, daysAhead, stock, productions, demandsList).create();
-        ShortageBuilder shortages = prediction.predict();
+        ShortagePredictionFactory factory = new ShortagePredictionFactory(today, daysAhead, stock, productions, demandsList);
+        ShortagePredictionService service = new ShortagePredictionService(factory);
+
+        ShortageBuilder shortages = service.findShortages();
+
         return shortages.toList();
     }
 
