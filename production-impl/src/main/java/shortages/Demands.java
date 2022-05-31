@@ -26,46 +26,31 @@ public class Demands {
             return DailyDemand.noDemand();
         }
         return new DailyDemand(
-                Util.getDeliverySchema(demands.get(day)),
-                Util.getLevel(demands.get(day))
+                Util.getLevel(demands.get(day)),
+                LevelOnDeliveryStrategyPick.pickStrategyVariant(Util.getDeliverySchema(demands.get(day)))
         );
     }
 
     public static class DailyDemand {
-        public static final DailyDemand NO_DEMAND = new DailyDemand(DeliverySchema.tillEndOfDay, 0);
-        private final DeliverySchema schema;
+        public static final DailyDemand NO_DEMAND = new DailyDemand(0, LevelOnDeliveryStrategyPick.pickStrategyVariant(DeliverySchema.tillEndOfDay));
         private final long level;
+        private final LevelOnDeliveryCalculation strategy;
 
         public static DailyDemand noDemand() {
             return NO_DEMAND;
         }
 
-        public DailyDemand(DeliverySchema schema, long level) {
-            this.schema = schema;
+        public DailyDemand(long level, LevelOnDeliveryCalculation strategy) {
             this.level = level;
-        }
-
-        public boolean hasDeliverySchema(DeliverySchema schema) {
-            return this.schema == schema;
+            this.strategy = strategy;
         }
 
         public long getLevel() {
             return level;
         }
 
-        public long calculateLevelOnDelivery(long stock, long produced) {
-            long demand = getLevel();
-            if (hasDeliverySchema(DeliverySchema.atDayStart)) {
-                return stock - demand;
-            } else if (hasDeliverySchema(DeliverySchema.tillEndOfDay)) {
-                return stock - demand + produced;
-            } else if (hasDeliverySchema(DeliverySchema.every3hours)) {
-                // TODO WTF ?? we need to rewrite that app :/
-                throw new UnsupportedOperationException();
-            } else {
-                // TODO implement other variants
-                throw new UnsupportedOperationException();
-            }
+        public long calculate(long level, long produced) {
+            return strategy.calculate(level, produced, this.level);
         }
     }
 }

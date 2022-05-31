@@ -58,7 +58,9 @@ public class ShortageFinder {
                 continue;
             }
             long produced = outputs.getLevel(day);
-            long levelOnDelivery = demand.calculateLevelOnDelivery(level, produced);
+            long levelOnDelivery;
+
+            levelOnDelivery = demand.calculate(level, produced);
 
             if (levelOnDelivery < 0) {
                 shortages.add(day, levelOnDelivery);
@@ -68,4 +70,5 @@ public class ShortageFinder {
         }
         return shortages.toList();
     }
+
 }
