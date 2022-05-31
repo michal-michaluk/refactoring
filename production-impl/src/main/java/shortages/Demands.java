@@ -22,6 +22,9 @@ public class Demands {
     }
 
     public DailyDemand get(LocalDate day) {
+        if (!demands.containsKey(day)) {
+            return DailyDemand.noDemand();
+        }
         return new DailyDemand(
                 Util.getDeliverySchema(demands.get(day)),
                 Util.getLevel(demands.get(day))
@@ -29,8 +32,13 @@ public class Demands {
     }
 
     public static class DailyDemand {
-        private DeliverySchema schema;
-        private long level;
+        public static final DailyDemand NO_DEMAND = new DailyDemand(DeliverySchema.tillEndOfDay, 0);
+        private final DeliverySchema schema;
+        private final long level;
+
+        public static DailyDemand noDemand() {
+            return NO_DEMAND;
+        }
 
         public DailyDemand(DeliverySchema schema, long level) {
             this.schema = schema;

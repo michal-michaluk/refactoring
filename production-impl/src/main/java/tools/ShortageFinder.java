@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
+import static shortages.Demands.DailyDemand.NO_DEMAND;
 
 public class ShortageFinder {
 
@@ -52,7 +53,7 @@ public class ShortageFinder {
         ShortageBuilder shortages = new ShortageBuilder(outputs.getProductRefNo());
         for (LocalDate day : dates) {
             Demands.DailyDemand demand = demands.get(day);
-            if (demand == null) {
+            if (demand == NO_DEMAND) {
                 level += outputs.getLevel(day);
                 continue;
             }
