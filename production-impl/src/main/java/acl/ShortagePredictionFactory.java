@@ -3,19 +3,13 @@ package acl;
 import entities.DemandEntity;
 import entities.ProductionEntity;
 import external.CurrentStock;
-import shortages.Demands;
-import shortages.ProductionOutputs;
-import shortages.ShortagePrediction;
-import shortages.WarehouseStock;
+import shortages.*;
 import tools.Util;
 
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 
 public class ShortagePredictionFactory {
     private LocalDate today;
@@ -33,15 +27,12 @@ public class ShortagePredictionFactory {
     }
 
     public ShortagePrediction create() {
-        List<LocalDate> dates = Stream.iterate(today, date -> date.plusDays(1))
-                .limit(daysAhead)
-                .collect(toList());
-
+        DateRange dates = DateRange.from(today, daysAhead);
         WarehouseStock stock = createStock();
         ProductionOutputs outputs = createOutputs();
         Demands demands = createDemands();
 
-        return new ShortagePrediction(stock, dates, outputs, demands);
+        return new ShortagePrediction(dates, stock, outputs, demands);
     }
 
     private WarehouseStock createStock() {

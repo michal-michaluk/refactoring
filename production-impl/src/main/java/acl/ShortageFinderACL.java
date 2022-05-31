@@ -4,7 +4,7 @@ import entities.DemandEntity;
 import entities.ProductionEntity;
 import entities.ShortageEntity;
 import external.CurrentStock;
-import shortages.ShortageBuilder;
+import shortages.Shortage;
 import shortages.ShortagePredictionService;
 import tools.ShortageFinder;
 
@@ -25,9 +25,9 @@ public class ShortageFinderACL {
             ShortagePredictionFactory factory = new ShortagePredictionFactory(today, daysAhead, stock, productions, demandsList);
             ShortagePredictionService service = new ShortagePredictionService(factory);
 
-            ShortageBuilder shortages = service.findShortages();
+            Shortage shortages = service.findShortages();
 
-            return shortages.toList();
+            return ShortagesMapper.toEntities(shortages);
         } else {
             return ShortageFinder.findShortages(today, daysAhead, stock, productions, demandsList);
         }

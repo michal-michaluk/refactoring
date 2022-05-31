@@ -9,7 +9,7 @@ public class ShortagePredictionService {
         this.factory = factory;
     }
 
-    public ShortageBuilder findShortages() {
+    public Shortage findShortages() {
         ShortagePrediction prediction = factory.create();
         return prediction.predict();
     }

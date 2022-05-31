@@ -1,29 +1,26 @@
 package shortages;
 
-import external.CurrentStock;
-
 import java.time.LocalDate;
-import java.util.List;
 
 import static shortages.Demands.DailyDemand.NO_DEMAND;
 
 public class ShortagePrediction {
-    private WarehouseStock stock;
-    private List<LocalDate> dates;
-    private ProductionOutputs outputs;
-    private Demands demands;
+    private final WarehouseStock stock;
+    private final DateRange dates;
+    private final ProductionOutputs outputs;
+    private final Demands demands;
 
-    public ShortagePrediction(WarehouseStock stock, List<LocalDate> dates, ProductionOutputs outputs, Demands demands) {
+    public ShortagePrediction(DateRange dates, WarehouseStock stock, ProductionOutputs outputs, Demands demands) {
         this.stock = stock;
         this.dates = dates;
         this.outputs = outputs;
         this.demands = demands;
     }
 
-    public ShortageBuilder predict() {
+    public Shortage predict() {
         long level = stock.level();
 
-        ShortageBuilder shortages = new ShortageBuilder(outputs.getProductRefNo());
+        Shortage.Builder shortages = Shortage.builder(outputs.getProductRefNo());
         for (LocalDate day : dates) {
             Demands.DailyDemand demand = demands.get(day);
             if (demand == NO_DEMAND) {
@@ -39,6 +36,6 @@ public class ShortagePrediction {
             long endOfDayLevel = demand.calculateEndOfDayLevel(level, produced);
             level = Math.max(endOfDayLevel, 0);
         }
-        return shortages;
+        return shortages.build();
     }
 }
