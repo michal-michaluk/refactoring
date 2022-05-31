@@ -41,12 +41,12 @@ public class Demands {
         }
 
         public long calculateLevelOnDelivery(long stock, long produced) {
-            long demand = this.getLevel();
-            if (this.hasDeliverySchema(DeliverySchema.atDayStart)) {
+            long demand = getLevel();
+            if (hasDeliverySchema(DeliverySchema.atDayStart)) {
                 return stock - demand;
-            } else if (this.hasDeliverySchema(DeliverySchema.tillEndOfDay)) {
+            } else if (hasDeliverySchema(DeliverySchema.tillEndOfDay)) {
                 return stock - demand + produced;
-            } else if (this.hasDeliverySchema(DeliverySchema.every3hours)) {
+            } else if (hasDeliverySchema(DeliverySchema.every3hours)) {
                 // TODO WTF ?? we need to rewrite that app :/
                 throw new UnsupportedOperationException();
             } else {
