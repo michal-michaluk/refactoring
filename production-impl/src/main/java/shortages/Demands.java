@@ -22,22 +22,27 @@ public class Demands {
     }
 
     public DailyDemand get(LocalDate day) {
-        return new DailyDemand(demands.get(day));
+        return new DailyDemand(
+                Util.getDeliverySchema(demands.get(day)),
+                Util.getLevel(demands.get(day))
+        );
     }
 
     public static class DailyDemand {
-        private final DemandEntity demand;
+        private DeliverySchema schema;
+        private long level;
 
-        public DailyDemand(DemandEntity demand) {
-            this.demand = demand;
+        public DailyDemand(DeliverySchema schema, long level) {
+            this.schema = schema;
+            this.level = level;
         }
 
         public boolean hasDeliverySchema(DeliverySchema schema) {
-            return Util.getDeliverySchema(demand) == schema;
+            return this.schema == schema;
         }
 
         public long getLevel() {
-            return Util.getLevel(demand);
+            return level;
         }
 
         public long calculateLevelOnDelivery(long stock, long produced) {
