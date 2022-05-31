@@ -1,5 +1,7 @@
 package shortages;
 
+import acl.ShortagePredictionFactory;
+
 public class ShortagePredictionService {
     private ShortagePredictionFactory factory;
 

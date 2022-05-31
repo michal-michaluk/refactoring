@@ -1,8 +1,11 @@
-package shortages;
+package acl;
 
 import entities.DemandEntity;
 import entities.ProductionEntity;
 import external.CurrentStock;
+import shortages.Demands;
+import shortages.ProductionOutputs;
+import shortages.ShortagePrediction;
 
 import java.time.LocalDate;
 import java.util.List;
