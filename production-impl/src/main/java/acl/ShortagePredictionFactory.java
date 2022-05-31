@@ -6,9 +6,13 @@ import external.CurrentStock;
 import shortages.Demands;
 import shortages.ProductionOutputs;
 import shortages.ShortagePrediction;
+import shortages.WarehouseStock;
+import tools.Util;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -18,14 +22,14 @@ public class ShortagePredictionFactory {
     private int daysAhead;
     private CurrentStock stock;
     private List<ProductionEntity> productions;
-    private List<DemandEntity> demandsList;
+    private List<DemandEntity> demands;
 
-    public ShortagePredictionFactory(LocalDate today, int daysAhead, CurrentStock stock, List<ProductionEntity> productions, List<DemandEntity> demandsList) {
+    public ShortagePredictionFactory(LocalDate today, int daysAhead, CurrentStock stock, List<ProductionEntity> productions, List<DemandEntity> demands) {
         this.today = today;
         this.daysAhead = daysAhead;
         this.stock = stock;
         this.productions = productions;
-        this.demandsList = demandsList;
+        this.demands = demands;
     }
 
     public ShortagePrediction create() {
@@ -33,9 +37,38 @@ public class ShortagePredictionFactory {
                 .limit(daysAhead)
                 .collect(toList());
 
-        ProductionOutputs outputs = new ProductionOutputs(productions);
-        Demands demands = new Demands(demandsList);
+        WarehouseStock stock = createStock();
+        ProductionOutputs outputs = createOutputs();
+        Demands demands = createDemands();
 
         return new ShortagePrediction(stock, dates, outputs, demands);
+    }
+
+    private WarehouseStock createStock() {
+        return new WarehouseStock(this.stock.getLevel(), this.stock.getLocked());
+    }
+
+    private Demands createDemands() {
+        return new Demands(demands.stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        DemandEntity::getDay,
+                        demand -> new Demands.DailyDemand(
+                                Util.getLevel(demand),
+                                LevelOnDeliveryStrategyPick.pickStrategyVariant(Util.getDeliverySchema(demand))
+                        )
+                )));
+    }
+
+    private ProductionOutputs createOutputs() {
+        return new ProductionOutputs(
+                productions.stream()
+                        .map(production -> production.getForm().getRefNo())
+                        .findFirst()
+                        .orElse(null),
+                Collections.unmodifiableMap(productions.stream()
+                        .collect(Collectors.groupingBy(
+                                production -> production.getStart().toLocalDate(),
+                                Collectors.summingLong(ProductionEntity::getOutput)
+                        ))));
     }
 }
