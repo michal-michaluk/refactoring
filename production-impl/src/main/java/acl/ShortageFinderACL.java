@@ -5,6 +5,7 @@ import entities.ProductionEntity;
 import entities.ShortageEntity;
 import external.CurrentStock;
 import shortages.Shortage;
+import shortages.ShortagePrediction;
 import shortages.ShortagePredictionService;
 import tools.ShortageFinder;
 
@@ -21,16 +22,34 @@ public class ShortageFinderACL {
     public static List<ShortageEntity> findShortages(LocalDate today, int daysAhead, CurrentStock stock,
                                                      List<ProductionEntity> productions, List<DemandEntity> demandsList) {
 
+        List<ShortageEntity> oldModel = ShortageFinder.findShortages(today, daysAhead, stock, productions, demandsList);
+
         if (TOGGLE_NEW_MODEL) {
             ShortagePredictionFactory factory = new ShortagePredictionFactory(today, daysAhead, stock, productions, demandsList);
             ShortagePredictionService service = new ShortagePredictionService(factory);
 
-            Shortage shortages = service.findShortages();
+            ShortagePrediction prediction = factory.create();
+            Shortage newModel = prediction.predict();
+            Shortage oldModelAsShortage = ShortagesMapper.fromEntities(oldModel);
 
-            return ShortagesMapper.toEntities(shortages);
-        } else {
-            return ShortageFinder.findShortages(today, daysAhead, stock, productions, demandsList);
+            if (newModel.equals(oldModelAsShortage)) {
+                logSuccess();
+            } else {
+                logIssue(newModel, oldModelAsShortage, prediction);
+            }
         }
+        return oldModel;
     }
 
+    private static void logSuccess() {
+        System.out.println("Shortage Prediction new model equal to old one");
+    }
+
+    private static void logIssue(Shortage newModel, Shortage oldModelAsShortage, ShortagePrediction prediction) {
+        LogIssue issue = new LogIssue("Shortage Prediction differs", prediction, newModel, oldModelAsShortage);
+        System.out.println(issue);
+    }
+
+    private record LogIssue(String message, ShortagePrediction prediction, Shortage newResult, Shortage oldResult) {
+    }
 }
