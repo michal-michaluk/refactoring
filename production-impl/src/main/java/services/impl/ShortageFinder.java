@@ -7,10 +7,14 @@ import entities.ProductionEntity;
 import entities.ShortageEntity;
 import enums.DeliverySchema;
 import external.CurrentStock;
+import shortages.ProductionOutputs;
 import tools.Util;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class ShortageFinder {
@@ -49,7 +53,7 @@ public class ShortageFinder {
                 .limit(daysAhead)
                 .toList();
 
-        Map<LocalDate, List<ProductionEntity>> outputs = createOutputs(productions);
+        ProductionOutputs outputs = ProductionOutputs.createOutputs(productions);
         Map<LocalDate, DemandEntity> demandsPerDay = new HashMap<>();
         for (DemandEntity demand : demands) {
             demandsPerDay.put(demand.getDay(), demand);
@@ -61,11 +65,10 @@ public class ShortageFinder {
         for (LocalDate day : dates) {
             DemandEntity demand = demandsPerDay.get(day);
             if (demand == null) {
-                level = sumOutputs(day, outputs, level);
+                level += outputs.sumOutputs(day);
                 continue;
             }
-            long produced = 0;
-            produced = sumOutputs(day, outputs, produced);
+            long produced = outputs.sumOutputs(day);
 
             long levelOnDelivery;
             if (Util.getDeliverySchema(demand) == DeliverySchema.atDayStart) {
@@ -92,23 +95,5 @@ public class ShortageFinder {
             level = endOfDayLevel >= 0 ? endOfDayLevel : 0;
         }
         return gap;
-    }
-
-    private static Map<LocalDate, List<ProductionEntity>> createOutputs(List<ProductionEntity> productions) {
-        Map<LocalDate, List<ProductionEntity>> outputs = new HashMap<>();
-        for (ProductionEntity production : productions) {
-            if (!outputs.containsKey(production.getStart().toLocalDate())) {
-                outputs.put(production.getStart().toLocalDate(), new ArrayList<>());
-            }
-            outputs.get(production.getStart().toLocalDate()).add(production);
-        }
-        return outputs;
-    }
-
-    private static long sumOutputs(LocalDate day, Map<LocalDate, List<ProductionEntity>> outputs, long level) {
-        for (ProductionEntity production : outputs.get(day)) {
-            level += production.getOutput();
-        }
-        return level;
     }
 }
